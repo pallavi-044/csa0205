@@ -1,0 +1,2613 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
+#define MAX_PASSENGERS 100
+#define MAX_FLIGHTS 50
+#define MAX_RESERVATIONS 200
+
+/* =========================
+   STRUCTURES
+   ========================= */
+
+typedef struct
+{
+    int day;
+    int month;
+    int year;
+} Date;
+
+typedef struct
+{
+    char name[50];
+    char phone[15];
+    char email[50];
+} ContactDetails;
+
+typedef struct
+{
+    int passengerId;
+    char name[50];
+    int age;
+    char gender[10];
+    char nationality[30];
+    ContactDetails contact;
+} Passenger;
+
+typedef struct
+{
+    char flightId[15];
+    char airline[40];
+    char source[40];
+    char destination[40];
+    char flightType[20];
+
+    Date departureDate;
+
+    char departureTime[10];
+
+    int totalSeats;
+    int availableSeats;
+
+    float baseFare;
+} Flight;
+
+typedef struct
+{
+    char cardHolder[50];
+    char paymentMode[20];
+
+    float baseAmount;
+    float tax;
+    float discount;
+    float totalAmount;
+
+    char paymentStatus[20];
+} Payment;
+
+typedef struct
+{
+    int reservationId;
+
+    Passenger passenger;
+    Flight flight;
+
+    int priority;
+
+    char seatClass[20];
+
+    int seatNumber;
+
+    char bookingStatus[20];
+
+    Date bookingDate;
+
+    Payment payment;
+
+} Reservation;
+
+
+/* =========================
+   FUNCTION PROTOTYPES
+   ========================= */
+
+void clearInputBuffer(void);
+
+void readLine(
+    const char *prompt,
+    char text[],
+    int size
+);
+
+int readInt(
+    const char *prompt
+);
+
+float readFloat(
+    const char *prompt
+);
+
+void printLine(void);
+void mainMenu(void);
+
+
+/* Passenger functions */
+
+void addPassenger(
+    Passenger passengers[],
+    int *count
+);
+
+void displayPassengers(
+    Passenger passengers[],
+    int count
+);
+
+void searchPassenger(
+    Passenger passengers[],
+    int count
+);
+
+
+/* Flight functions */
+
+void addFlight(
+    Flight flights[],
+    int *count
+);
+
+void displayFlights(
+    Flight flights[],
+    int count
+);
+
+void searchFlight(
+    Flight flights[],
+    int count
+);
+
+void sortFlightsByFare(
+    Flight flights[],
+    int count
+);
+
+
+/* Reservation functions */
+
+void createReservation(
+    Passenger passengers[],
+    int passengerCount,
+    Flight flights[],
+    int flightCount,
+    Reservation reservations[],
+    int *reservationCount
+);
+
+void displayReservations(
+    Reservation reservations[],
+    int count
+);
+
+void searchReservation(
+    Reservation reservations[],
+    int count
+);
+
+void updateReservation(
+    Reservation reservations[],
+    int count
+);
+
+void cancelReservation(
+    Reservation reservations[],
+    int count,
+    Flight flights[],
+    int flightCount
+);
+
+void sortReservationsByPriority(
+    Reservation reservations[],
+    int count
+);
+
+
+/* Search functions */
+
+int findPassengerIndex(
+    Passenger passengers[],
+    int count,
+    int id
+);
+
+int findFlightIndex(
+    Flight flights[],
+    int count,
+    const char id[]
+);
+
+int findReservationIndex(
+    Reservation reservations[],
+    int count,
+    int id
+);
+
+
+/* Fare calculation */
+
+float calculateTicketCost(
+    const Flight *flight,
+    const char seatClass[],
+    int priority
+);
+
+
+/* File functions */
+
+void savePassengers(
+    Passenger passengers[],
+    int count
+);
+
+void saveFlights(
+    Flight flights[],
+    int count
+);
+
+void saveReservations(
+    Reservation reservations[],
+    int count
+);
+
+void loadPassengers(
+    Passenger passengers[],
+    int *count
+);
+
+void loadFlights(
+    Flight flights[],
+    int *count
+);
+
+void loadReservations(
+    Reservation reservations[],
+    int *count
+);
+
+
+/* =========================
+   MAIN
+   ========================= */
+
+int main(void)
+{
+    Passenger passengers[MAX_PASSENGERS];
+
+    Flight flights[MAX_FLIGHTS];
+
+    Reservation reservations[MAX_RESERVATIONS];
+
+    int passengerCount = 0;
+    int flightCount = 0;
+    int reservationCount = 0;
+
+    int choice;
+
+    /*
+       Load saved records when
+       the program starts.
+    */
+
+    loadPassengers(
+        passengers,
+        &passengerCount
+    );
+
+    loadFlights(
+        flights,
+        &flightCount
+    );
+
+    loadReservations(
+        reservations,
+        &reservationCount
+    );
+
+
+    /*
+       Main menu loop
+    */
+
+    do
+    {
+        mainMenu();
+
+        choice = readInt(
+            "Enter your choice: "
+        );
+
+
+        switch (choice)
+        {
+            case 1:
+
+                addPassenger(
+                    passengers,
+                    &passengerCount
+                );
+
+                break;
+
+
+            case 2:
+
+                displayPassengers(
+                    passengers,
+                    passengerCount
+                );
+
+                break;
+
+
+            case 3:
+
+                searchPassenger(
+                    passengers,
+                    passengerCount
+                );
+
+                break;
+
+
+            case 4:
+
+                addFlight(
+                    flights,
+                    &flightCount
+                );
+
+                break;
+
+
+            case 5:
+
+                displayFlights(
+                    flights,
+                    flightCount
+                );
+
+                break;
+
+
+            case 6:
+
+                searchFlight(
+                    flights,
+                    flightCount
+                );
+
+                break;
+
+
+            case 7:
+
+                createReservation(
+                    passengers,
+                    passengerCount,
+                    flights,
+                    flightCount,
+                    reservations,
+                    &reservationCount
+                );
+
+                break;
+
+
+            case 8:
+
+                displayReservations(
+                    reservations,
+                    reservationCount
+                );
+
+                break;
+
+
+            case 9:
+
+                searchReservation(
+                    reservations,
+                    reservationCount
+                );
+
+                break;
+
+
+            case 10:
+
+                updateReservation(
+                    reservations,
+                    reservationCount
+                );
+
+                break;
+
+
+            case 11:
+
+                cancelReservation(
+                    reservations,
+                    reservationCount,
+                    flights,
+                    flightCount
+                );
+
+                break;
+
+
+            case 12:
+
+                sortReservationsByPriority(
+                    reservations,
+                    reservationCount
+                );
+
+                printf(
+                    "\nReservations sorted by priority.\n"
+                );
+
+                displayReservations(
+                    reservations,
+                    reservationCount
+                );
+
+                break;
+
+
+            case 13:
+
+                sortFlightsByFare(
+                    flights,
+                    flightCount
+                );
+
+                printf(
+                    "\nFlights sorted by fare.\n"
+                );
+
+                displayFlights(
+                    flights,
+                    flightCount
+                );
+
+                break;
+
+
+            case 14:
+
+                savePassengers(
+                    passengers,
+                    passengerCount
+                );
+
+                saveFlights(
+                    flights,
+                    flightCount
+                );
+
+                saveReservations(
+                    reservations,
+                    reservationCount
+                );
+
+                printf(
+                    "\nAll records saved successfully.\n"
+                );
+
+                break;
+
+
+            case 15:
+
+                savePassengers(
+                    passengers,
+                    passengerCount
+                );
+
+                saveFlights(
+                    flights,
+                    flightCount
+                );
+
+                saveReservations(
+                    reservations,
+                    reservationCount
+                );
+
+                printf(
+                    "\nRecords saved. Thank you.\n"
+                );
+
+                break;
+
+
+            default:
+
+                printf(
+                    "\nInvalid choice."
+                    " Please enter a number from 1 to 15.\n"
+                );
+        }
+
+    } while (choice != 15);
+
+
+    return 0;
+}
+
+
+/* =========================
+   MAIN MENU
+   ========================= */
+
+void mainMenu(void)
+{
+    printLine();
+
+    printf(
+        "       AIRLINE RESERVATION CENTRE\n"
+    );
+
+    printLine();
+
+    printf("1. Add Passenger\n");
+    printf("2. Display Passengers\n");
+    printf("3. Search Passenger\n");
+
+    printf("4. Add Flight\n");
+    printf("5. Display Flights\n");
+    printf("6. Search Flight\n");
+
+    printf("7. Create Reservation\n");
+    printf("8. Display Reservations\n");
+    printf("9. Search Reservation\n");
+
+    printf("10. Update Reservation\n");
+    printf("11. Cancel Reservation\n");
+
+    printf("12. Sort Reservations by Priority\n");
+    printf("13. Sort Flights by Fare\n");
+
+    printf("14. Save Records\n");
+    printf("15. Save and Exit\n");
+
+    printLine();
+}
+
+
+/* =========================
+   PASSENGER
+   ========================= */
+
+void addPassenger(
+    Passenger passengers[],
+    int *count
+)
+{
+    int i;
+
+    Passenger *p;
+
+
+    if (*count >= MAX_PASSENGERS)
+    {
+        printf(
+            "\nPassenger storage is full.\n"
+        );
+
+        return;
+    }
+
+
+    p = &passengers[*count];
+
+
+    p->passengerId = readInt(
+        "\nEnter Passenger ID: "
+    );
+
+
+    if (p->passengerId <= 0)
+    {
+        printf(
+            "\nPassenger ID must be positive.\n"
+        );
+
+        return;
+    }
+
+
+    /*
+       Check duplicate ID
+    */
+
+    for (i = 0; i < *count; i++)
+    {
+        if (
+            passengers[i].passengerId ==
+            p->passengerId
+        )
+        {
+            printf(
+                "\nPassenger ID already exists.\n"
+            );
+
+            return;
+        }
+    }
+
+
+    readLine(
+        "Enter passenger name: ",
+        p->name,
+        sizeof(p->name)
+    );
+
+
+    if (p->name[0] == '\0')
+    {
+        printf(
+            "\nName cannot be empty.\n"
+        );
+
+        return;
+    }
+
+
+    p->age = readInt(
+        "Enter age: "
+    );
+
+
+    if (
+        p->age <= 0 ||
+        p->age > 120
+    )
+    {
+        printf(
+            "\nInvalid age.\n"
+        );
+
+        return;
+    }
+
+
+    readLine(
+        "Enter gender: ",
+        p->gender,
+        sizeof(p->gender)
+    );
+
+
+    readLine(
+        "Enter nationality: ",
+        p->nationality,
+        sizeof(p->nationality)
+    );
+
+
+    readLine(
+        "Enter phone: ",
+        p->contact.phone,
+        sizeof(p->contact.phone)
+    );
+
+
+    readLine(
+        "Enter email: ",
+        p->contact.email,
+        sizeof(p->contact.email)
+    );
+
+
+    strcpy(
+        p->contact.name,
+        p->name
+    );
+
+
+    (*count)++;
+
+
+    printf(
+        "\nPassenger added successfully.\n"
+    );
+}
+
+
+void displayPassengers(
+    Passenger passengers[],
+    int count
+)
+{
+    int i;
+
+
+    if (count == 0)
+    {
+        printf(
+            "\nNo passengers available.\n"
+        );
+
+        return;
+    }
+
+
+    printf(
+        "\n========== PASSENGER RECORDS ==========\n"
+    );
+
+
+    for (i = 0; i < count; i++)
+    {
+        printf(
+            "\nID: %d\n",
+            passengers[i].passengerId
+        );
+
+        printf(
+            "Name: %s\n",
+            passengers[i].name
+        );
+
+        printf(
+            "Age: %d\n",
+            passengers[i].age
+        );
+
+        printf(
+            "Gender: %s\n",
+            passengers[i].gender
+        );
+
+        printf(
+            "Nationality: %s\n",
+            passengers[i].nationality
+        );
+
+        printf(
+            "Phone: %s\n",
+            passengers[i].contact.phone
+        );
+
+        printf(
+            "Email: %s\n",
+            passengers[i].contact.email
+        );
+
+        printLine();
+    }
+}
+
+
+void searchPassenger(
+    Passenger passengers[],
+    int count
+)
+{
+    int id;
+
+    int index;
+
+
+    id = readInt(
+        "\nEnter Passenger ID: "
+    );
+
+
+    index = findPassengerIndex(
+        passengers,
+        count,
+        id
+    );
+
+
+    if (index == -1)
+    {
+        printf(
+            "\nPassenger not found.\n"
+        );
+
+        return;
+    }
+
+
+    printf(
+        "\nPassenger found.\n"
+    );
+
+    printf(
+        "ID: %d\n",
+        passengers[index].passengerId
+    );
+
+    printf(
+        "Name: %s\n",
+        passengers[index].name
+    );
+
+    printf(
+        "Phone: %s\n",
+        passengers[index].contact.phone
+    );
+
+    printf(
+        "Email: %s\n",
+        passengers[index].contact.email
+    );
+}
+
+
+/* =========================
+   FLIGHT
+   ========================= */
+
+void addFlight(
+    Flight flights[],
+    int *count
+)
+{
+    int i;
+
+    Flight *f;
+
+
+    if (*count >= MAX_FLIGHTS)
+    {
+        printf(
+            "\nFlight storage is full.\n"
+        );
+
+        return;
+    }
+
+
+    f = &flights[*count];
+
+
+    readLine(
+        "\nEnter Flight ID: ",
+        f->flightId,
+        sizeof(f->flightId)
+    );
+
+
+    if (f->flightId[0] == '\0')
+    {
+        printf(
+            "\nFlight ID cannot be empty.\n"
+        );
+
+        return;
+    }
+
+
+    /*
+       Check duplicate Flight ID
+    */
+
+    for (i = 0; i < *count; i++)
+    {
+        if (
+            strcmp(
+                flights[i].flightId,
+                f->flightId
+            ) == 0
+        )
+        {
+            printf(
+                "\nFlight ID already exists.\n"
+            );
+
+            return;
+        }
+    }
+
+
+    readLine(
+        "Enter Airline: ",
+        f->airline,
+        sizeof(f->airline)
+    );
+
+
+    readLine(
+        "Enter Source: ",
+        f->source,
+        sizeof(f->source)
+    );
+
+
+    readLine(
+        "Enter Destination: ",
+        f->destination,
+        sizeof(f->destination)
+    );
+
+
+    readLine(
+        "Enter Type (Domestic/International): ",
+        f->flightType,
+        sizeof(f->flightType)
+    );
+
+
+    f->departureDate.day =
+        readInt(
+            "Enter Departure Day: "
+        );
+
+
+    f->departureDate.month =
+        readInt(
+            "Enter Departure Month: "
+        );
+
+
+    f->departureDate.year =
+        readInt(
+            "Enter Departure Year: "
+        );
+
+
+    if (
+        f->departureDate.day < 1 ||
+        f->departureDate.day > 31 ||
+        f->departureDate.month < 1 ||
+        f->departureDate.month > 12 ||
+        f->departureDate.year < 1
+    )
+    {
+        printf(
+            "\nInvalid departure date.\n"
+        );
+
+        return;
+    }
+
+
+    readLine(
+        "Enter Departure Time: ",
+        f->departureTime,
+        sizeof(f->departureTime)
+    );
+
+
+    f->totalSeats =
+        readInt(
+            "Enter Total Seats: "
+        );
+
+
+    if (f->totalSeats <= 0)
+    {
+        printf(
+            "\nInvalid seat count.\n"
+        );
+
+        return;
+    }
+
+
+    f->availableSeats =
+        f->totalSeats;
+
+
+    f->baseFare =
+        readFloat(
+            "Enter Base Fare: "
+        );
+
+
+    if (f->baseFare <= 0.0f)
+    {
+        printf(
+            "\nInvalid fare.\n"
+        );
+
+        return;
+    }
+
+
+    (*count)++;
+
+
+    printf(
+        "\nFlight added successfully.\n"
+    );
+}
+
+
+void displayFlights(
+    Flight flights[],
+    int count
+)
+{
+    int i;
+
+
+    if (count == 0)
+    {
+        printf(
+            "\nNo flights available.\n"
+        );
+
+        return;
+    }
+
+
+    printf(
+        "\n========== FLIGHT RECORDS ==========\n"
+    );
+
+
+    for (i = 0; i < count; i++)
+    {
+        printf(
+            "\nFlight ID: %s\n",
+            flights[i].flightId
+        );
+
+        printf(
+            "Airline: %s\n",
+            flights[i].airline
+        );
+
+        printf(
+            "Route: %s -> %s\n",
+            flights[i].source,
+            flights[i].destination
+        );
+
+        printf(
+            "Type: %s\n",
+            flights[i].flightType
+        );
+
+        printf(
+            "Date: %02d/%02d/%04d\n",
+            flights[i].departureDate.day,
+            flights[i].departureDate.month,
+            flights[i].departureDate.year
+        );
+
+        printf(
+            "Time: %s\n",
+            flights[i].departureTime
+        );
+
+        printf(
+            "Seats Available: %d/%d\n",
+            flights[i].availableSeats,
+            flights[i].totalSeats
+        );
+
+        printf(
+            "Base Fare: %.2f\n",
+            flights[i].baseFare
+        );
+
+        printLine();
+    }
+}
+
+
+void searchFlight(
+    Flight flights[],
+    int count
+)
+{
+    char id[15];
+
+    int index;
+
+
+    readLine(
+        "\nEnter Flight ID: ",
+        id,
+        sizeof(id)
+    );
+
+
+    index = findFlightIndex(
+        flights,
+        count,
+        id
+    );
+
+
+    if (index == -1)
+    {
+        printf(
+            "\nFlight not found.\n"
+        );
+
+        return;
+    }
+
+
+    printf(
+        "\nFlight found.\n"
+    );
+
+    printf(
+        "Flight ID: %s\n",
+        flights[index].flightId
+    );
+
+    printf(
+        "Airline: %s\n",
+        flights[index].airline
+    );
+
+    printf(
+        "Route: %s -> %s\n",
+        flights[index].source,
+        flights[index].destination
+    );
+
+    printf(
+        "Available seats: %d\n",
+        flights[index].availableSeats
+    );
+
+    printf(
+        "Fare: %.2f\n",
+        flights[index].baseFare
+    );
+}
+
+
+void sortFlightsByFare(
+    Flight flights[],
+    int count
+)
+{
+    int i;
+    int j;
+
+    Flight temp;
+
+
+    for (i = 0; i < count - 1; i++)
+    {
+        for (
+            j = 0;
+            j < count - i - 1;
+            j++
+        )
+        {
+            if (
+                flights[j].baseFare >
+                flights[j + 1].baseFare
+            )
+            {
+                temp =
+                    flights[j];
+
+                flights[j] =
+                    flights[j + 1];
+
+                flights[j + 1] =
+                    temp;
+            }
+        }
+    }
+}
+
+
+/* =========================
+   RESERVATION
+   ========================= */
+
+void createReservation(
+    Passenger passengers[],
+    int passengerCount,
+    Flight flights[],
+    int flightCount,
+    Reservation reservations[],
+    int *reservationCount
+)
+{
+    static int bookingCounter = 1000;
+
+    int passengerId;
+
+    int pIndex;
+
+    int fIndex;
+
+    char flightId[15];
+
+    Reservation *r;
+
+
+    if (
+        *reservationCount >=
+        MAX_RESERVATIONS
+    )
+    {
+        printf(
+            "\nReservation storage is full.\n"
+        );
+
+        return;
+    }
+
+
+    passengerId =
+        readInt(
+            "\nEnter Passenger ID: "
+        );
+
+
+    pIndex =
+        findPassengerIndex(
+            passengers,
+            passengerCount,
+            passengerId
+        );
+
+
+    if (pIndex == -1)
+    {
+        printf(
+            "\nPassenger not found.\n"
+        );
+
+        return;
+    }
+
+
+    readLine(
+        "Enter Flight ID: ",
+        flightId,
+        sizeof(flightId)
+    );
+
+
+    fIndex =
+        findFlightIndex(
+            flights,
+            flightCount,
+            flightId
+        );
+
+
+    if (fIndex == -1)
+    {
+        printf(
+            "\nFlight not found.\n"
+        );
+
+        printf(
+            "Please add the flight using option 4 first.\n"
+        );
+
+        return;
+    }
+
+
+    if (
+        flights[fIndex].availableSeats <= 0
+    )
+    {
+        printf(
+            "\nNo seats available.\n"
+        );
+
+        return;
+    }
+
+
+    r =
+        &reservations[*reservationCount];
+
+
+    r->reservationId =
+        ++bookingCounter;
+
+
+    r->passenger =
+        passengers[pIndex];
+
+
+    r->flight =
+        flights[fIndex];
+
+
+    r->priority =
+        readInt(
+            "Priority "
+            "(1 Emergency, 2 High, 3 Normal): "
+        );
+
+
+    if (
+        r->priority < 1 ||
+        r->priority > 3
+    )
+    {
+        printf(
+            "\nInvalid priority. "
+            "Normal priority selected.\n"
+        );
+
+        r->priority = 3;
+    }
+
+
+    readLine(
+        "Seat Class (Economy/Business/First): ",
+        r->seatClass,
+        sizeof(r->seatClass)
+    );
+
+
+    if (r->seatClass[0] == '\0')
+    {
+        strcpy(
+            r->seatClass,
+            "Economy"
+        );
+    }
+
+
+    /*
+       Allocate the next available seat.
+    */
+
+    r->seatNumber =
+        flights[fIndex].totalSeats -
+        flights[fIndex].availableSeats +
+        1;
+
+
+    strcpy(
+        r->bookingStatus,
+        "Confirmed"
+    );
+
+
+    r->bookingDate.day =
+        readInt(
+            "Booking Day: "
+        );
+
+
+    r->bookingDate.month =
+        readInt(
+            "Booking Month: "
+        );
+
+
+    r->bookingDate.year =
+        readInt(
+            "Booking Year: "
+        );
+
+
+    r->payment.baseAmount =
+        flights[fIndex].baseFare;
+
+
+    r->payment.totalAmount =
+        calculateTicketCost(
+            &flights[fIndex],
+            r->seatClass,
+            r->priority
+        );
+
+
+    r->payment.tax =
+        r->payment.totalAmount *
+        0.05f;
+
+
+    r->payment.discount =
+        0.0f;
+
+
+    readLine(
+        "Payment Mode (Cash/Card/UPI): ",
+        r->payment.paymentMode,
+        sizeof(r->payment.paymentMode)
+    );
+
+
+    readLine(
+        "Payer/Card Holder: ",
+        r->payment.cardHolder,
+        sizeof(r->payment.cardHolder)
+    );
+
+
+    strcpy(
+        r->payment.paymentStatus,
+        "Paid"
+    );
+
+
+    flights[fIndex].availableSeats--;
+
+
+    (*reservationCount)++;
+
+
+    printf(
+        "\nReservation created successfully.\n"
+    );
+
+
+    printf(
+        "Reservation ID: %d\n",
+        r->reservationId
+    );
+
+
+    printf(
+        "Flight ID: %s\n",
+        r->flight.flightId
+    );
+
+
+    printf(
+        "Passenger: %s\n",
+        r->passenger.name
+    );
+
+
+    printf(
+        "Seat Number: %d\n",
+        r->seatNumber
+    );
+
+
+    printf(
+        "Total Fare: %.2f\n",
+        r->payment.totalAmount
+    );
+}
+
+
+void displayReservations(
+    Reservation reservations[],
+    int count
+)
+{
+    int i;
+
+
+    if (count == 0)
+    {
+        printf(
+            "\nNo reservations available.\n"
+        );
+
+        return;
+    }
+
+
+    printf(
+        "\n========== RESERVATION RECORDS ==========\n"
+    );
+
+
+    for (i = 0; i < count; i++)
+    {
+        printf(
+            "\nReservation ID: %d\n",
+            reservations[i].reservationId
+        );
+
+        printf(
+            "Passenger: %s\n",
+            reservations[i].passenger.name
+        );
+
+        printf(
+            "Flight ID: %s\n",
+            reservations[i].flight.flightId
+        );
+
+        printf(
+            "Route: %s -> %s\n",
+            reservations[i].flight.source,
+            reservations[i].flight.destination
+        );
+
+        printf(
+            "Priority: %d\n",
+            reservations[i].priority
+        );
+
+        printf(
+            "Seat: %d\n",
+            reservations[i].seatNumber
+        );
+
+        printf(
+            "Class: %s\n",
+            reservations[i].seatClass
+        );
+
+        printf(
+            "Status: %s\n",
+            reservations[i].bookingStatus
+        );
+
+        printf(
+            "Payment: %s\n",
+            reservations[i].payment.paymentStatus
+        );
+
+        printf(
+            "Fare: %.2f\n",
+            reservations[i].payment.totalAmount
+        );
+
+        printLine();
+    }
+}
+
+
+void searchReservation(
+    Reservation reservations[],
+    int count
+)
+{
+    int id;
+
+    int index;
+
+    Reservation *r;
+
+
+    id =
+        readInt(
+            "\nEnter Reservation ID: "
+        );
+
+
+    index =
+        findReservationIndex(
+            reservations,
+            count,
+            id
+        );
+
+
+    if (index == -1)
+    {
+        printf(
+            "\nReservation not found.\n"
+        );
+
+        return;
+    }
+
+
+    r =
+        &reservations[index];
+
+
+    printf(
+        "\nReservation found.\n"
+    );
+
+    printf(
+        "Reservation ID: %d\n",
+        r->reservationId
+    );
+
+    printf(
+        "Passenger: %s\n",
+        r->passenger.name
+    );
+
+    printf(
+        "Flight: %s\n",
+        r->flight.flightId
+    );
+
+    printf(
+        "Priority: %d\n",
+        r->priority
+    );
+
+    printf(
+        "Seat: %d\n",
+        r->seatNumber
+    );
+
+    printf(
+        "Status: %s\n",
+        r->bookingStatus
+    );
+
+    printf(
+        "Fare: %.2f\n",
+        r->payment.totalAmount
+    );
+}
+
+
+void updateReservation(
+    Reservation reservations[],
+    int count
+)
+{
+    int id;
+
+    int index;
+
+    int choice;
+
+
+    id =
+        readInt(
+            "\nEnter Reservation ID: "
+        );
+
+
+    index =
+        findReservationIndex(
+            reservations,
+            count,
+            id
+        );
+
+
+    if (index == -1)
+    {
+        printf(
+            "\nReservation not found.\n"
+        );
+
+        return;
+    }
+
+
+    if (
+        strcmp(
+            reservations[index].bookingStatus,
+            "Cancelled"
+        ) == 0
+    )
+    {
+        printf(
+            "\nCancelled reservation "
+            "cannot be updated.\n"
+        );
+
+        return;
+    }
+
+
+    printf("\n1. Update Priority");
+    printf("\n2. Update Seat Class");
+    printf("\n3. Update Passenger Phone\n");
+
+
+    choice =
+        readInt(
+            "Choice: "
+        );
+
+
+    if (choice == 1)
+    {
+        reservations[index].priority =
+            readInt(
+                "New priority (1-3): "
+            );
+
+
+        if (
+            reservations[index].priority < 1 ||
+            reservations[index].priority > 3
+        )
+        {
+            reservations[index].priority = 3;
+
+            printf(
+                "Invalid priority. "
+                "Normal priority selected.\n"
+            );
+        }
+    }
+
+
+    else if (choice == 2)
+    {
+        readLine(
+            "New seat class: ",
+            reservations[index].seatClass,
+            sizeof(
+                reservations[index].seatClass
+            )
+        );
+
+
+        reservations[index].payment.totalAmount =
+            calculateTicketCost(
+                &reservations[index].flight,
+                reservations[index].seatClass,
+                reservations[index].priority
+            );
+    }
+
+
+    else if (choice == 3)
+    {
+        readLine(
+            "New phone: ",
+            reservations[index]
+                .passenger.contact.phone,
+            sizeof(
+                reservations[index]
+                    .passenger.contact.phone
+            )
+        );
+    }
+
+
+    else
+    {
+        printf(
+            "\nInvalid choice.\n"
+        );
+
+        return;
+    }
+
+
+    printf(
+        "\nReservation updated successfully.\n"
+    );
+}
+
+
+void cancelReservation(
+    Reservation reservations[],
+    int count,
+    Flight flights[],
+    int flightCount
+)
+{
+    int id;
+
+    int index;
+
+    int flightIndex;
+
+
+    id =
+        readInt(
+            "\nEnter Reservation ID: "
+        );
+
+
+    index =
+        findReservationIndex(
+            reservations,
+            count,
+            id
+        );
+
+
+    if (index == -1)
+    {
+        printf(
+            "\nReservation not found.\n"
+        );
+
+        return;
+    }
+
+
+    if (
+        strcmp(
+            reservations[index].bookingStatus,
+            "Cancelled"
+        ) == 0
+    )
+    {
+        printf(
+            "\nReservation already cancelled.\n"
+        );
+
+        return;
+    }
+
+
+    strcpy(
+        reservations[index].bookingStatus,
+        "Cancelled"
+    );
+
+
+    strcpy(
+        reservations[index].payment.paymentStatus,
+        "Refund Pending"
+    );
+
+
+    flightIndex =
+        findFlightIndex(
+            flights,
+            flightCount,
+            reservations[index].flight.flightId
+        );
+
+
+    if (
+        flightIndex != -1 &&
+        flights[flightIndex].availableSeats <
+        flights[flightIndex].totalSeats
+    )
+    {
+        flights[flightIndex].availableSeats++;
+    }
+
+
+    printf(
+        "\nReservation cancelled "
+        "and seat released.\n"
+    );
+}
+
+
+/* =========================
+   SORTING
+   ========================= */
+
+void sortReservationsByPriority(
+    Reservation reservations[],
+    int count
+)
+{
+    int i;
+
+    int j;
+
+    Reservation temp;
+
+
+    for (i = 0; i < count - 1; i++)
+    {
+        for (
+            j = 0;
+            j < count - i - 1;
+            j++
+        )
+        {
+            if (
+                reservations[j].priority >
+                reservations[j + 1].priority
+            )
+            {
+                temp =
+                    reservations[j];
+
+                reservations[j] =
+                    reservations[j + 1];
+
+                reservations[j + 1] =
+                    temp;
+            }
+
+            else if (
+                reservations[j].priority ==
+                reservations[j + 1].priority &&
+                reservations[j].reservationId >
+                reservations[j + 1].reservationId
+            )
+            {
+                temp =
+                    reservations[j];
+
+                reservations[j] =
+                    reservations[j + 1];
+
+                reservations[j + 1] =
+                    temp;
+            }
+        }
+    }
+}
+
+
+/* =========================
+   SEARCH
+   ========================= */
+
+int findPassengerIndex(
+    Passenger passengers[],
+    int count,
+    int id
+)
+{
+    int i;
+
+
+    for (i = 0; i < count; i++)
+    {
+        if (
+            passengers[i].passengerId ==
+            id
+        )
+        {
+            return i;
+        }
+    }
+
+
+    return -1;
+}
+
+
+int findFlightIndex(
+    Flight flights[],
+    int count,
+    const char id[]
+)
+{
+    int i;
+
+
+    for (i = 0; i < count; i++)
+    {
+        if (
+            strcmp(
+                flights[i].flightId,
+                id
+            ) == 0
+        )
+        {
+            return i;
+        }
+    }
+
+
+    return -1;
+}
+
+
+int findReservationIndex(
+    Reservation reservations[],
+    int count,
+    int id
+)
+{
+    int i;
+
+
+    for (i = 0; i < count; i++)
+    {
+        if (
+            reservations[i].reservationId ==
+            id
+        )
+        {
+            return i;
+        }
+    }
+
+
+    return -1;
+}
+
+
+/* =========================
+   TICKET COST
+   ========================= */
+
+float calculateTicketCost(
+    const Flight *flight,
+    const char seatClass[],
+    int priority
+)
+{
+    float amount;
+
+    float classCharge = 0.0f;
+
+    float priorityCharge = 0.0f;
+
+    float tax;
+
+
+    amount =
+        flight->baseFare;
+
+
+    /*
+       Business = 50% extra
+       First = 100% extra
+    */
+
+    if (
+        strcmp(
+            seatClass,
+            "Business"
+        ) == 0 ||
+        strcmp(
+            seatClass,
+            "business"
+        ) == 0
+    )
+    {
+        classCharge =
+            amount * 0.50f;
+    }
+
+
+    else if (
+        strcmp(
+            seatClass,
+            "First"
+        ) == 0 ||
+        strcmp(
+            seatClass,
+            "first"
+        ) == 0
+    )
+    {
+        classCharge =
+            amount;
+    }
+
+
+    /*
+       Emergency = 10% extra
+       High = 5% extra
+    */
+
+    if (priority == 1)
+    {
+        priorityCharge =
+            amount * 0.10f;
+    }
+
+    else if (priority == 2)
+    {
+        priorityCharge =
+            amount * 0.05f;
+    }
+
+
+    amount =
+        amount +
+        classCharge +
+        priorityCharge;
+
+
+    tax =
+        amount * 0.05f;
+
+
+    return amount + tax;
+}
+
+
+/* =========================
+   SAVE FILES
+   ========================= */
+
+void savePassengers(
+    Passenger passengers[],
+    int count
+)
+{
+    FILE *fp;
+
+
+    fp =
+        fopen(
+            "passengers.dat",
+            "wb"
+        );
+
+
+    if (fp == NULL)
+    {
+        printf(
+            "\nPassenger file error.\n"
+        );
+
+        return;
+    }
+
+
+    fwrite(
+        &count,
+        sizeof(int),
+        1,
+        fp
+    );
+
+
+    fwrite(
+        passengers,
+        sizeof(Passenger),
+        count,
+        fp
+    );
+
+
+    fclose(fp);
+}
+
+
+void saveFlights(
+    Flight flights[],
+    int count
+)
+{
+    FILE *fp;
+
+
+    fp =
+        fopen(
+            "flights.dat",
+            "wb"
+        );
+
+
+    if (fp == NULL)
+    {
+        printf(
+            "\nFlight file error.\n"
+        );
+
+        return;
+    }
+
+
+    fwrite(
+        &count,
+        sizeof(int),
+        1,
+        fp
+    );
+
+
+    fwrite(
+        flights,
+        sizeof(Flight),
+        count,
+        fp
+    );
+
+
+    fclose(fp);
+}
+
+
+void saveReservations(
+    Reservation reservations[],
+    int count
+)
+{
+    FILE *fp;
+
+
+    fp =
+        fopen(
+            "reservations.dat",
+            "wb"
+        );
+
+
+    if (fp == NULL)
+    {
+        printf(
+            "\nReservation file error.\n"
+        );
+
+        return;
+    }
+
+
+    fwrite(
+        &count,
+        sizeof(int),
+        1,
+        fp
+    );
+
+
+    fwrite(
+        reservations,
+        sizeof(Reservation),
+        count,
+        fp
+    );
+
+
+    fclose(fp);
+}
+
+
+/* =========================
+   LOAD FILES
+   ========================= */
+
+void loadPassengers(
+    Passenger passengers[],
+    int *count
+)
+{
+    FILE *fp;
+
+
+    fp =
+        fopen(
+            "passengers.dat",
+            "rb"
+        );
+
+
+    if (fp == NULL)
+    {
+        *count = 0;
+
+        return;
+    }
+
+
+    if (
+        fread(
+            count,
+            sizeof(int),
+            1,
+            fp
+        ) != 1
+    )
+    {
+        *count = 0;
+
+        fclose(fp);
+
+        return;
+    }
+
+
+    if (*count < 0)
+    {
+        *count = 0;
+    }
+
+
+    if (*count > MAX_PASSENGERS)
+    {
+        *count =
+            MAX_PASSENGERS;
+    }
+
+
+    fread(
+        passengers,
+        sizeof(Passenger),
+        *count,
+        fp
+    );
+
+
+    fclose(fp);
+}
+
+
+void loadFlights(
+    Flight flights[],
+    int *count
+)
+{
+    FILE *fp;
+
+
+    fp =
+        fopen(
+            "flights.dat",
+            "rb"
+        );
+
+
+    if (fp == NULL)
+    {
+        *count = 0;
+
+        return;
+    }
+
+
+    if (
+        fread(
+            count,
+            sizeof(int),
+            1,
+            fp
+        ) != 1
+    )
+    {
+        *count = 0;
+
+        fclose(fp);
+
+        return;
+    }
+
+
+    if (*count < 0)
+    {
+        *count = 0;
+    }
+
+
+    if (*count > MAX_FLIGHTS)
+    {
+        *count =
+            MAX_FLIGHTS;
+    }
+
+
+    fread(
+        flights,
+        sizeof(Flight),
+        *count,
+        fp
+    );
+
+
+    fclose(fp);
+}
+
+
+void loadReservations(
+    Reservation reservations[],
+    int *count
+)
+{
+    FILE *fp;
+
+
+    fp =
+        fopen(
+            "reservations.dat",
+            "rb"
+        );
+
+
+    if (fp == NULL)
+    {
+        *count = 0;
+
+        return;
+    }
+
+
+    if (
+        fread(
+            count,
+            sizeof(int),
+            1,
+            fp
+        ) != 1
+    )
+    {
+        *count = 0;
+
+        fclose(fp);
+
+        return;
+    }
+
+
+    if (*count < 0)
+    {
+        *count = 0;
+    }
+
+
+    if (*count > MAX_RESERVATIONS)
+    {
+        *count =
+            MAX_RESERVATIONS;
+    }
+
+
+    fread(
+        reservations,
+        sizeof(Reservation),
+        *count,
+        fp
+    );
+
+
+    fclose(fp);
+}
+
+
+/* =========================
+   SAFE INPUT FUNCTIONS
+   ========================= */
+
+void readLine(
+    const char *prompt,
+    char text[],
+    int size
+)
+{
+    size_t length;
+
+
+    printf(
+        "%s",
+        prompt
+    );
+
+
+    if (
+        fgets(
+            text,
+            size,
+            stdin
+        ) == NULL
+    )
+    {
+        text[0] = '\0';
+
+        return;
+    }
+
+
+    length =
+        strlen(text);
+
+
+    if (
+        length > 0 &&
+        text[length - 1] == '\n'
+    )
+    {
+        text[length - 1] =
+            '\0';
+    }
+
+    else
+    {
+        clearInputBuffer();
+    }
+}
+
+
+int readInt(
+    const char *prompt
+)
+{
+    char input[100];
+
+    int value;
+
+    char extra;
+
+
+    while (1)
+    {
+        printf(
+            "%s",
+            prompt
+        );
+
+
+        if (
+            fgets(
+                input,
+                sizeof(input),
+                stdin
+            ) == NULL
+        )
+        {
+            return 0;
+        }
+
+
+        /*
+           Accept only a valid integer.
+        */
+
+        if (
+            sscanf(
+                input,
+                " %d %c",
+                &value,
+                &extra
+            ) == 1
+        )
+        {
+            return value;
+        }
+
+
+        printf(
+            "Invalid input. "
+            "Please enter a whole number.\n"
+        );
+    }
+}
+
+
+float readFloat(
+    const char *prompt
+)
+{
+    char input[100];
+
+    float value;
+
+    char extra;
+
+
+    while (1)
+    {
+        printf(
+            "%s",
+            prompt
+        );
+
+
+        if (
+            fgets(
+                input,
+                sizeof(input),
+                stdin
+            ) == NULL
+        )
+        {
+            return 0.0f;
+        }
+
+
+        if (
+            sscanf(
+                input,
+                " %f %c",
+                &value,
+                &extra
+            ) == 1
+        )
+        {
+            return value;
+        }
+
+
+        printf(
+            "Invalid input. "
+            "Please enter a number.\n"
+        );
+    }
+}
+
+
+void clearInputBuffer(void)
+{
+    int c;
+
+
+    while (
+        (c = getchar()) != '\n' &&
+        c != EOF
+    )
+    {
+        /* discard */
+    }
+}
+
+
+/* =========================
+   PRINT LINE
+   ========================= */
+
+void printLine(void)
+{
+    int i;
+
+
+    for (i = 0; i < 65; i++)
+    {
+        printf("=");
+    }
+
+
+    printf("\n");
+}
